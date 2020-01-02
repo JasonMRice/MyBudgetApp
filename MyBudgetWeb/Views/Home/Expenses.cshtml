@@ -1,0 +1,201 @@
+﻿@model MyBudgetWeb.ViewModel.ExpenseViewModel
+@{
+    ViewData["Title"] = "Expenses";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-header {
+            background-color: lightgrey;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            height: auto;
+        }
+
+        .modal-body {
+            background-color: white;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            height: auto;
+        }
+
+        .modal-footer {
+            background-color: lightgrey;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 40%;
+            height: auto;
+        }
+
+        .modalTitle {
+            display: inline-block;
+            text-align: left;
+        }
+
+        .close {
+            color: #111;
+            text-align: right;
+            font-size: 28px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
+    </style>
+</head>
+<body>
+    <h1>Expenses</h1>
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
+        <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    </div>
+    <div class="row">
+        <button id="editBtn" onclick="OpenModal('Activate')">Edit Expense</button>
+    </div>
+    <div class="row">
+        <br />
+    </div>
+    <table id="example" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Id</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Day of Month</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="myModal" class="modal">
+        <div class="modal-header">
+            <h2>Edit This Expense</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body" style="text-align:center;">
+            <div style="display:none;">
+                @Html.EditorFor(model => model.ExpenseIdForEdit)
+            </div>
+            <div class="form-group">
+                <h5 style="display:inline-block;width:40%;">Description</h5>
+                @Html.EditorFor(model => model.DescriptionForEdit, new { htmlAttrributes = new { @class = "form-control", @style = "display:inline-block;" } })
+            </div>
+            <div class="form-group">
+                <h5 style="display:inline-block;width:40%;">Price</h5>
+                @Html.EditorFor(model => model.PriceForEdit, new { htmlAttrributes = new { @class = "form-control", @style = "display:inline-block;" } })
+            </div>
+            <div class="form-group">
+                <h5 style="display:inline-block;width:40%;">Day of Month</h5>
+                @Html.EditorFor(model => model.DayOfMonthForEdit, new { htmlAttrributes = new { @class = "form-control", @style = "display:inline-block;" } })
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger btn-sm" onclick="">
+                <i class="fas fa-trash"></i> Delete Expense
+            </button>
+            <button type="button" class="btn btn-success btn-sm" onclick="">
+                <i class="far fa-save"></i> Save Changes
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                type: "Get",
+                dataType: "json",
+                url: "/Home/GetExpensesList",
+                success: function (data) {
+                    $("#example").DataTable({
+                        data: data,
+                        columns: [
+                            {
+                                'data': null,
+                                'defaultContent': '',
+                                'className': 'select-checkbox',
+                                'orderable': false
+                            },
+                            { 'data': "expenseId" },
+                            { 'data': "description" },
+                            { 'data': "price" },
+                            { 'data': "dayOfMonth" }
+                        ],
+                        select: {
+                            style: 'os',
+                            selector: 'td:first-child'
+                        },
+                        columnDefs: [
+                            {
+                                targets: [1],
+                                visible: false,
+                                searchable: false
+                            }
+                        ]
+                    })
+                    var table = $("#example").DataTable();
+                    $('#example').on('click', 'tbody td:first-child', function (e) {
+                        var thisData = table.row(this).data();
+                        $("#ExpenseIdForEdit").val(thisData.expenseId);
+                        $("#PriceForEdit").val(thisData.price);
+                        $("#DescriptionForEdit").val(thisData.description);
+                        $("#DayOfMonthForEdit").val(thisData.dayOfMonth);
+                    });
+                }
+            })
+        });
+
+        var myModal = document.getElementById('myModal');
+        var span = document.getElementsByClassName("close")[0];
+
+        function OpenModal(action) {
+            myModal.style.display = "block";
+            var expenseId = $("#ExpenseIdForEdit").val();
+            if (action == "Activate") {
+                $("#activateMessage").show();
+                $("#inactivateMessage").hide();
+            }
+        }
+
+        // When the user clicks on <span> (x), close the myModal
+        span.onclick = function () {
+            myModal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the myModal, close it
+        window.onclick = function (event) {
+            if (event.target == myModal) {
+                myModal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
